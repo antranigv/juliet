@@ -1,37 +1,41 @@
-# Romeo
+# Juliet
 
 > XMPP Client
 
 [![Build Status](https://travis-ci.org/scrogson/romeo.svg?branch=master)](https://travis-ci.org/scrogson/romeo)
 [![Coverage Status](https://coveralls.io/repos/scrogson/romeo/badge.svg?branch=master&service=github)](https://coveralls.io/github/scrogson/romeo?branch=master)
 
+Juliet is a fork of [Romeo](https://github.com/scrogson/romeo) (MIT, © Sonny Scroggin),
+maintained by Antranig Vartanian. It keeps the same public API: rename `Romeo` to
+`Juliet` and it should work.
+
 ## Installation
 
-1. Add romeo to your list of dependencies in `mix.exs`:
+1. Add juliet to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:romeo, "~> 0.7"}]
+  [{:juliet, "~> 0.1"}]
 end
 ```
 
-2. Ensure romeo is started before your application:
+2. Ensure juliet is started before your application:
 
 ```elixir
 def application do
-  [applications: [:romeo]]
+  [applications: [:juliet]]
 end
 ```
 
 ## Usage
 
 ```elixir
-alias Romeo.Stanza
-alias Romeo.Connection, as: Conn
-alias Romeo.Roster
+alias Juliet.Stanza
+alias Juliet.Connection, as: Conn
+alias Juliet.Roster
 
 # Minimum configuration options
-opts = [jid: "romeo@montague.lit", password: "iL0v3JuL137"]
+opts = [jid: "juliet@capulet.lit", password: "iL0v3JuL137"]
 
 # Start the client
 {:ok, pid} = Conn.start_link(opts)
@@ -43,27 +47,27 @@ opts = [jid: "romeo@montague.lit", password: "iL0v3JuL137"]
 :ok = Conn.send(pid, Stanza.get_roster)
 
 # Join a chat room
-:ok = Conn.send(pid, Stanza.join("library@muc.montague.lit", "romeo"))
+:ok = Conn.send(pid, Stanza.join("library@muc.capulet.lit", "juliet"))
 
 # Send a message to the room
 msg = "See how she leans her cheek upon her hand! " <>
       "O that I were a glove upon that hand, that " <>
       "I might touch that cheek!"
-:ok = Conn.send(pid, Stanza.groupchat("library@muc.montague.lit", msg))
+:ok = Conn.send(pid, Stanza.groupchat("library@muc.capulet.lit", msg))
 
-# Get roster items as tuple of %Romeo.Roster.Items{} struct
+# Get roster items as tuple of %Juliet.Roster.Items{} struct
 items = Roster.items(pid)
 
 # Add jid to roster
-:ok = Roster.add(pid, "juliet@capulet.lit")
+:ok = Roster.add(pid, "romeo@montague.lit")
 
 # Remove jid from roster
-:ok = Roster.remove(pid, "juliet@capulet.lit")
+:ok = Roster.remove(pid, "romeo@montague.lit")
 ```
 
 ## Documentation
 
-Documentation is available on [hexdocs](http://hexdocs.pm/romeo/)
+Documentation is available on [hexdocs](http://hexdocs.pm/juliet/).
 
 ## Naming
 
@@ -75,6 +79,7 @@ and Juliet in the XMPP specifications.
 The MIT License (MIT)
 
 Copyright (c) 2015 Sonny Scroggin
+Copyright (c) 2026 Antranig Vartanian
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
