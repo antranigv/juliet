@@ -73,4 +73,16 @@ defmodule Juliet.XMLTest do
 
     assert cdata(body) == "testing"
   end
+
+  test "parse/encode round-trip" do
+    xml =
+      Path.join([__DIR__, "..", "fixtures", "message.xml"])
+      |> File.read!()
+      |> parse_element()
+
+    encoded = encode!(xml)
+    assert encoded =~ "<message"
+    assert encoded =~ "<body>Where art thou?</body>"
+    assert encoded == encoded |> parse_element() |> encode!()
+  end
 end

@@ -51,3 +51,11 @@ The previous `test/user_helper.exs` and the ejabberd-backed live tests in
 `test/juliet/connection_test.exs` and `test/juliet/roster_test.exs` were
 replaced with unit tests that exercise the renamed modules and the new
 Saxy-based XML layer.
+
+## M2 verification
+
+Milestone M2 was verified as complete. The only deviation from `plan.md` is the
+preservation of the public `{:xmlel, ...}` tuple shape documented above. A
+duplicate `Juliet.Stanza.to_xml/1` clause was removed, an XML parse/encode
+round-trip test was added, and leftover unused NIF dependency directories were
+cleaned with `mix deps.clean --unused`.

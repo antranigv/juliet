@@ -12,10 +12,6 @@ defmodule Juliet.Stanza do
     Juliet.XML.encode!(record)
   end
 
-  def to_xml(record) when Record.is_record(record) do
-    Juliet.XML.encode!(record)
-  end
-
   def to_xml(%IQ{} = stanza) do
     xmlel(
       name: "iq",
