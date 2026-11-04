@@ -59,3 +59,31 @@ preservation of the public `{:xmlel, ...}` tuple shape documented above. A
 duplicate `Juliet.Stanza.to_xml/1` clause was removed, an XML parse/encode
 round-trip test was added, and leftover unused NIF dependency directories were
 cleaned with `mix deps.clean --unused`.
+
+## M4 — SCRAM authentication
+
+### Mechanism selection is public for testability
+
+`Juliet.Auth.preferred_mechanism/2` was changed from a private function to a
+public (but undocumented, `@doc false`) function. This keeps the mechanism
+selection tests simple and avoids the need for a full mock transport exchange
+just to verify that SCRAM-SHA-256 is preferred over SCRAM-SHA-1 and PLAIN. All
+other public function names, arities, struct fields, and owner-process messages
+remain identical to Romeo.
+
+### Whitespace in `<mechanisms>` children
+
+While implementing the mechanism-selection tests, `Juliet.Connection.Features`
+was fixed to ignore non-`xmlel` whitespace children when parsing the list of
+advertised SASL mechanisms. This is a bug fix in the existing feature parser,
+not a behavior change.
+
+### Implementation notes
+
+* SCRAM-SHA-1 and SCRAM-SHA-256 are implemented in `Juliet.Auth.SCRAM` using
+  `:crypto.pbkdf2_hmac/5`, `:crypto.mac/4`, and `:crypto.hash/2`.
+* The default preference order is SCRAM-SHA-256 → SCRAM-SHA-1 → PLAIN.
+* Users can force a mechanism by setting `preferred_auth_mechanisms:` to a list
+  containing only that mechanism (e.g., `["SCRAM-SHA-1"]`).
+* Server signatures are verified against the expected value derived during the
+  exchange.

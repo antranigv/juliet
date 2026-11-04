@@ -23,6 +23,10 @@ defmodule Juliet.Auth do
   @doc """
   Authenticates the client using the configured preferred mechanism.
 
+  Preferred mechanisms can be set via the `:preferred_auth_mechanisms` option.
+  When left empty the library prefers SCRAM-SHA-256, then SCRAM-SHA-1, and
+  finally falls back to PLAIN.
+
   If the preferred mechanism is not supported it will choose PLAIN.
   """
   def authenticate!(conn) do
@@ -49,7 +53,7 @@ defmodule Juliet.Auth do
   end
 
   defp do_authenticate(mechanism, conn) do
-    {:ok, conn} =
+    result =
       case mechanism do
         {name, mod} ->
           Logger.info(fn -> "Authenticating with extension #{name} implemented by #{mod}" end)
@@ -60,10 +64,24 @@ defmodule Juliet.Auth do
           authenticate_with(mechanism, conn)
       end
 
-    case success?(conn) do
-      {:ok, conn} -> conn
-      {:error, _conn} -> raise Juliet.Auth.Error, mechanism
+    case result do
+      {:ok, conn} ->
+        case success?(conn) do
+          {:ok, conn} -> conn
+          {:error, _conn} -> raise Juliet.Auth.Error, mechanism
+        end
+
+      {:ok, conn, :done} ->
+        conn
     end
+  end
+
+  defp authenticate_with("SCRAM-SHA-256", conn) do
+    Juliet.Auth.SCRAM.authenticate("SCRAM-SHA-256", conn)
+  end
+
+  defp authenticate_with("SCRAM-SHA-1", conn) do
+    Juliet.Auth.SCRAM.authenticate("SCRAM-SHA-1", conn)
   end
 
   defp authenticate_with("PLAIN", %{transport: mod} = conn) do
@@ -104,9 +122,11 @@ defmodule Juliet.Auth do
     [Juliet.JID.parse(jid).user, password]
   end
 
-  defp preferred_mechanism([], _), do: "PLAIN"
+  @doc false
+  def preferred_mechanism([], mechanisms),
+    do: preferred_mechanism(["SCRAM-SHA-256", "SCRAM-SHA-1", "PLAIN"], mechanisms)
 
-  defp preferred_mechanism([mechanism | tail], mechanisms) do
+  def preferred_mechanism([mechanism | tail], mechanisms) do
     case acceptable_mechanism?(mechanism, mechanisms) do
       true -> mechanism
       false -> preferred_mechanism(tail, mechanisms)

@@ -28,7 +28,11 @@ defmodule Juliet.Connection.Features do
     case Juliet.XML.subelement(features, "mechanisms") do
       xml when Record.is_record(xml, :xmlel) ->
         mechanisms = xmlel(xml, :children)
-        for mechanism <- mechanisms, into: [], do: Juliet.XML.cdata(mechanism)
+
+        for mechanism <- mechanisms,
+            Record.is_record(mechanism, :xmlel),
+            into: [],
+            do: Juliet.XML.cdata(mechanism)
 
       nil ->
         []
