@@ -54,4 +54,21 @@ defmodule Juliet.JidTest do
              full: "example.com"
            }
   end
+
+  test "user/1, server/1, and resource/1 work with structs and binaries" do
+    jid = "jdoe@example.com/library"
+
+    assert JID.user(jid) == "jdoe"
+    assert JID.server(jid) == "example.com"
+    assert JID.resource(jid) == "library"
+
+    parsed = JID.parse(jid)
+    assert JID.user(parsed) == "jdoe"
+    assert JID.server(parsed) == "example.com"
+    assert JID.resource(parsed) == "library"
+  end
+
+  test "bare returns a server-only JID unchanged" do
+    assert JID.bare("example.com") == "example.com"
+  end
 end

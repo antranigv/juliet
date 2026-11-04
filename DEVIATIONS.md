@@ -87,3 +87,27 @@ not a behavior change.
   containing only that mechanism (e.g., `["SCRAM-SHA-1"]`).
 * Server signatures are verified against the expected value derived during the
   exchange.
+
+## M5 — MUC send
+
+### `Juliet.MUC.send/4` accepts an optional `:timeout`
+
+`plan.md` specifies `Juliet.MUC.send(pid, room_jid, body)`. The implemented
+function has an optional fourth argument for options, currently used to
+override the self-presence wait timeout (default 5000 ms). Calling it as
+`Juliet.MUC.send(pid, room_jid, body)` remains the normal usage.
+
+### Mix task parsing helpers are public for testing
+
+`Mix.Tasks.Juliet.SendMuc.parse_args/1` and
+`Mix.Tasks.Juliet.SendMuc.config_from_env/0` are public but marked `@doc false`
+so that the task's argument and environment-variable handling can be unit
+tested without making a real network connection.
+
+### Live MUC test skip decision is made at compile time
+
+`ExUnit.SkipError` is not available in the Elixir/ExUnit version installed in
+this environment, so the live test determines at compile time whether the
+required `JULIET_*` environment variables are present and sets `@tag skip:`
+accordingly. If the variables are missing, `mix test --only live` reports the
+test as skipped.

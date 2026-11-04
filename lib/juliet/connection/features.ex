@@ -9,6 +9,7 @@ defmodule Juliet.Connection.Features do
   defstruct amp?: false,
             compression?: false,
             registration?: false,
+            session?: false,
             stream_management?: false,
             tls?: false,
             mechanisms: []
@@ -18,6 +19,7 @@ defmodule Juliet.Connection.Features do
       amp?: supports?(features, "amp"),
       compression?: supports?(features, "compression"),
       registration?: supports?(features, "register"),
+      session?: supports?(features, "session"),
       stream_management?: supports?(features, "sm"),
       tls?: supports?(features, "starttls"),
       mechanisms: supported_auth_mechanisms(features)

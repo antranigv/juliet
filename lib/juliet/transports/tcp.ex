@@ -143,7 +143,7 @@ defmodule Juliet.Transports.TCP do
     end)
   end
 
-  defp session(%Conn{} = conn) do
+  defp session(%Conn{features: %Features{session?: true}} = conn) do
     stanza = Juliet.Stanza.session()
     id = Juliet.XML.attr(stanza, "id")
 
@@ -157,6 +157,8 @@ defmodule Juliet.Transports.TCP do
       conn
     end)
   end
+
+  defp session(%Conn{} = conn), do: conn
 
   defp ready(%Conn{owner: owner} = conn) do
     Kernel.send(owner, :connection_ready)
