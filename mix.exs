@@ -44,7 +44,7 @@ defmodule Juliet.Mixfile do
   end
 
   defp docs_extras do
-    ["README.md", "CHANGELOG.md"]
+    ["README.md", "CHANGELOG.md", "MIGRATING.md"]
   end
 
   defp package do
