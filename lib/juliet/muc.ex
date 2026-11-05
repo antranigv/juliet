@@ -8,7 +8,7 @@ defmodule Juliet.MUC do
   alias Juliet.JID
   alias Juliet.Stanza
 
-  import Juliet.XML, only: [attr: 2, subelement: 2]
+  import Juliet.XML, only: [attr: 2]
 
   @default_timeout 5_000
 
@@ -37,39 +37,56 @@ defmodule Juliet.MUC do
   """
   def send(pid, room_jid, body, opts \\ []) do
     timeout = Keyword.get(opts, :timeout, @default_timeout)
+    deadline = System.monotonic_time(:millisecond) + timeout
 
-    case wait_for_self_presence(room_jid, timeout) do
+    case wait_for_self_presence(room_jid, deadline, []) do
       :ok -> Connection.send(pid, Stanza.groupchat(room_jid, body))
       error -> error
     end
   end
 
-  defp wait_for_self_presence(room_jid, timeout) do
-    room_bare = JID.bare(room_jid)
+  defp wait_for_self_presence(room_jid, deadline, deferred) do
+    remaining = deadline - System.monotonic_time(:millisecond)
 
-    receive do
-      {:stanza, %Juliet.Stanza.Presence{from: from, xml: xml}} ->
-        if JID.bare(from) == room_bare and self_presence?(xml) do
-          :ok
-        else
-          send(self(), {:stanza, %Juliet.Stanza.Presence{from: from, xml: xml}})
-          wait_for_self_presence(room_jid, timeout)
-        end
-    after
-      timeout -> {:error, :timeout}
+    if remaining <= 0 do
+      restore(deferred)
+      {:error, :timeout}
+    else
+      room_bare = JID.bare(room_jid)
+
+      receive do
+        {:stanza, %Juliet.Stanza.Presence{from: from, xml: xml}} = msg ->
+          if JID.bare(from) == room_bare and self_presence?(xml) do
+            restore(deferred)
+            :ok
+          else
+            wait_for_self_presence(room_jid, deadline, [msg | deferred])
+          end
+
+        other ->
+          wait_for_self_presence(room_jid, deadline, [other | deferred])
+      after
+        remaining ->
+          restore(deferred)
+          {:error, :timeout}
+      end
     end
   end
 
-  defp self_presence?(xml) do
-    case subelement(xml, "x") do
-      nil ->
-        false
+  defp restore(deferred) do
+    deferred
+    |> Enum.reverse()
+    |> Enum.each(&send(self(), &1))
+  end
 
-      x ->
-        attr(x, "xmlns") == Juliet.XMLNS.ns_muc_user() and
-          x
-          |> Juliet.XML.subelements("status")
-          |> Enum.any?(fn status -> attr(status, "code") == "110" end)
-    end
+  defp self_presence?(xml) do
+    xml
+    |> Juliet.XML.subelements("x")
+    |> Enum.any?(fn x ->
+      attr(x, "xmlns") == Juliet.XMLNS.ns_muc_user() and
+        x
+        |> Juliet.XML.subelements("status")
+        |> Enum.any?(fn status -> attr(status, "code") == "110" end)
+    end)
   end
 end

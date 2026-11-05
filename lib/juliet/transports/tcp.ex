@@ -2,7 +2,6 @@ defmodule Juliet.Transports.TCP do
   @moduledoc false
 
   @default_port 5222
-  @ssl_opts [reuse_sessions: true]
   @socket_opts [packet: :raw, mode: :binary, active: :once]
   @ns_jabber_client Juliet.XMLNS.ns_jabber_client()
   @ns_component_accept Juliet.XMLNS.ns_component_accept()
@@ -101,11 +100,24 @@ defmodule Juliet.Transports.TCP do
   defp upgrade_to_tls(%Conn{parser: parser, socket: {:gen_tcp, socket}} = conn) do
     Logger.info(fn -> "Negotiating secure connection" end)
 
-    {:ok, socket} = :ssl.connect(socket, conn.ssl_opts ++ @ssl_opts)
+    {:ok, socket} = :ssl.connect(socket, ssl_connect_opts(conn))
     parser = Juliet.XML.Stream.reset(parser)
 
     Logger.info(fn -> "Connection successfully secured" end)
     %{conn | socket: {:ssl, socket}, parser: parser}
+  end
+
+  defp ssl_connect_opts(%Conn{} = conn) do
+    # SNI uses the JID domain so connecting by IP still verifies the cert name.
+    defaults = [
+      verify: :verify_peer,
+      cacerts: :public_key.cacerts_get(),
+      server_name_indication: String.to_charlist(host(conn.jid)),
+      reuse_sessions: true
+    ]
+
+    # Caller ssl_opts win (e.g. verify: :verify_none for JULIET_INSECURE).
+    Keyword.merge(defaults, conn.ssl_opts || [])
   end
 
   defp authenticate(%Conn{} = conn) do
