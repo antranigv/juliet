@@ -7,3 +7,7 @@ erl_crash.dump
 /logs
 /config/ejabberd.yml
 /doc
+opencode.log
+v*.log
+_build/
+deps/

@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.1.0
+
+- Fork from Romeo: renamed all modules, application, and config keys from
+  `Romeo` to `Juliet`.
+- Replaced the `fast_xml` C/NIF dependency with the pure-Elixir `saxy` XML
+  parser.
+- Enabled TLS peer verification by default using the host CA trust store,
+  `server_name_indication`, and `:public_key` hostname checking.
+- Added SCRAM-SHA-256 and SCRAM-SHA-1 authentication with `:crypto`, falling
+  back to PLAIN when the server does not advertise SCRAM.
+- Added `Juliet.MUC` helpers (`join/3` and `send/3`) for joining and sending
+  messages to MUC rooms, including self-presence confirmation before sending.
+- Added `mix juliet.send_muc` task and `examples/send_muc.exs` for the primary
+  use case.
+
 ## v0.4.0
 
 - Enhancements

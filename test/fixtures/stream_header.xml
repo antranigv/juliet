@@ -1,0 +1,2 @@
+<?xml version='1.0'?>
+<stream:stream xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' id='test-stream-id' from='capulet.lit' version='1.0'>

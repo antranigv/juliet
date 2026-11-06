@@ -1,80 +1,115 @@
-# Romeo
+# Juliet
 
-> XMPP Client
+> An XMPP client for Elixir
 
-[![Build Status](https://travis-ci.org/scrogson/romeo.svg?branch=master)](https://travis-ci.org/scrogson/romeo)
-[![Coverage Status](https://coveralls.io/repos/scrogson/romeo/badge.svg?branch=master&service=github)](https://coveralls.io/github/scrogson/romeo?branch=master)
+Juliet is a fork of [Romeo](https://github.com/scrogson/romeo) (MIT, © Sonny
+Scroggin), maintained by Antranig Vartanian. It provides the same public API as
+Romeo — in most cases renaming `Romeo` to `Juliet` is enough to switch — but it
+is implemented in pure Elixir with no C/NIF dependencies and targets modern
+Elixir/OTP.
+
+The primary use case is connecting to an XMPP server, joining a Multi-User Chat
+(MUC) room, sending a message, and disconnecting cleanly.
 
 ## Installation
 
-1. Add romeo to your list of dependencies in `mix.exs`:
+Add `:juliet` to your dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:romeo, "~> 0.7"}]
+  [
+    {:juliet, "~> 0.1"}
+  ]
 end
 ```
 
-2. Ensure romeo is started before your application:
+Then run:
+
+```bash
+mix deps.get
+```
+
+## Quick start: send a message to a MUC room
 
 ```elixir
-def application do
-  [applications: [:romeo]]
+alias Juliet.Connection
+alias Juliet.MUC
+
+opts = [
+  jid: "juliet@capulet.lit",
+  password: "iL0v3JuL137"
+]
+
+{:ok, pid} = Connection.start_link(opts)
+
+receive do
+  :connection_ready -> :ok
+after
+  15_000 -> raise "timed out waiting for connection_ready"
 end
+
+:ok = MUC.join(pid, "library@muc.capulet.lit", "juliet")
+:ok = MUC.send(pid, "library@muc.capulet.lit", "Hello, MUC!")
+
+:ok = Connection.close(pid)
 ```
 
-## Usage
+The connection flow is: open the XMPP stream, negotiate STARTTLS when offered,
+authenticate, bind a resource, optionally establish a session, and then send
+`:connection_ready` to the owner process.
+
+A ready-to-run example is available at `examples/send_muc.exs`, and a Mix task
+is provided as `mix juliet.send_muc "Hello, MUC!"`.
+
+## TLS options
+
+By default Juliet verifies the peer certificate using the host's CA trust
+store, sets `server_name_indication` to the target host, and enables
+`verify_peer`. This is the recommended configuration for production.
+
+To disable certificate verification (for example against a test server with a
+self-signed certificate), pass `ssl_opts: [verify: :verify_none]`:
 
 ```elixir
-alias Romeo.Stanza
-alias Romeo.Connection, as: Conn
-alias Romeo.Roster
-
-# Minimum configuration options
-opts = [jid: "romeo@montague.lit", password: "iL0v3JuL137"]
-
-# Start the client
-{:ok, pid} = Conn.start_link(opts)
-
-# Send presence to the server
-:ok = Conn.send(pid, Stanza.presence)
-
-# Request your roster
-:ok = Conn.send(pid, Stanza.get_roster)
-
-# Join a chat room
-:ok = Conn.send(pid, Stanza.join("library@muc.montague.lit", "romeo"))
-
-# Send a message to the room
-msg = "See how she leans her cheek upon her hand! " <>
-      "O that I were a glove upon that hand, that " <>
-      "I might touch that cheek!"
-:ok = Conn.send(pid, Stanza.groupchat("library@muc.montague.lit", msg))
-
-# Get roster items as tuple of %Romeo.Roster.Items{} struct
-items = Roster.items(pid)
-
-# Add jid to roster
-:ok = Roster.add(pid, "juliet@capulet.lit")
-
-# Remove jid from roster
-:ok = Roster.remove(pid, "juliet@capulet.lit")
+opts = [
+  jid: "juliet@capulet.lit",
+  password: "iL0v3JuL137",
+  ssl_opts: [verify: :verify_none]
+]
 ```
 
-## Documentation
+You can also pass any other `:ssl` options through `ssl_opts`.
 
-Documentation is available on [hexdocs](http://hexdocs.pm/romeo/)
+## Authentication
 
-## Naming
+Juliet negotiates SASL authentication automatically. The default preference
+order is:
 
-It follows the great tradition to use characters of William Shakespeare's Romeo
-and Juliet in the XMPP specifications.
+1. `SCRAM-SHA-256`
+2. `SCRAM-SHA-1`
+3. `PLAIN`
+
+To force a specific mechanism, set `preferred_auth_mechanisms`:
+
+```elixir
+opts = [
+  jid: "juliet@capulet.lit",
+  password: "iL0v3JuL137",
+  preferred_auth_mechanisms: ["SCRAM-SHA-1"]
+]
+```
+
+## Fork note and credits
+
+Juliet is a fork of Romeo by Sonny Scroggin. Many thanks to the original
+authors and contributors for the design and API that Juliet builds on.
 
 ## License
 
 The MIT License (MIT)
 
 Copyright (c) 2015 Sonny Scroggin
+Copyright (c) 2026 Antranig Vartanian
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -93,9 +128,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-------------
-
-![Romeo and Juliet](https://upload.wikimedia.org/wikipedia/commons/c/cc/Picou%2C_Henri_Pierre_-_Romeo_and_Juliet.jpg
-"Henri-Pierre Picou [Public domain], via Wikimedia Commons")
-**Image credit:** Henri-Pierre Picou [Public domain], via Wikimedia Commons

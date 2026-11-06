@@ -1,0 +1,10 @@
+<stream:features>
+  <starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>
+  <mechanisms xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>
+    <mechanism>SCRAM-SHA-256</mechanism>
+    <mechanism>SCRAM-SHA-1</mechanism>
+    <mechanism>PLAIN</mechanism>
+  </mechanisms>
+  <bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'/>
+  <session xmlns='urn:ietf:params:xml:ns:xmpp-session'/>
+</stream:features>

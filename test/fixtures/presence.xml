@@ -1,0 +1,4 @@
+<presence from='romeo@montague.lit/orchard' to='juliet@capulet.lit' type='subscribe'>
+  <show>chat</show>
+  <status>Available</status>
+</presence>
